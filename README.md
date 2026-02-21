@@ -1,12 +1,12 @@
-# Magnetic Position Detector
+# 🧲 Magnetic Position Detector
 
-**Non-Contact Position Sensing via Hall Effect & Op-Amp Window Comparator**
+**Non-Contact Magnetic Sensing via Hall Effect and Window Comparator**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)  
-[![Hardware](https://img.shields.io/badge/Hardware-Analog-orange.svg)]()  
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Hardware](https://img.shields.io/badge/Hardware-Analog-orange.svg)]()
 [![PCB](https://img.shields.io/badge/PCB-Single--Layer-green.svg)]()
 
-> A pure analog circuit that replicates the laptop lid detection mechanism. Uses a Hall Effect sensor and window comparator (no microcontroller) to detect magnet proximity with two-state LED feedback.
+A pure analog circuit that emulates the laptop lid detection mechanism. Utilizes a Hall Effect sensor and op-amp-based window comparator to detect magnetic proximity with two-level LED indication—without any microcontroller.
 
 ![PCB Photo](hardware/photos/assembled.jpg)
 
@@ -14,158 +14,108 @@
 
 ## Overview
 
-Every time you close your laptop and it enters sleep mode, a small magnet in the display bezel triggers a Hall Effect sensor on the base. This project builds that exact mechanism from scratch using analog circuitry.
+When you close a modern laptop, a hidden magnet in the lid activates a Hall Effect sensor near the base, putting the system to sleep. This project replicates that core concept using only analog components and discrete circuit design.
 
-**Key Features:**
-- Non-contact magnetic sensing (zero mechanical wear)
-- Window comparator with dual thresholds (V<sub>L</sub> and V<sub>H</sub>)
-- Two-state LED indication:
-  - Yellow: Magnetic field detected (approaching)
-  - Red: Position confirmed (target distance reached)
-- Pure analog design (no microcontroller/firmware)
-- Hand-fabricated PCB using toner-transfer etching
+**Highlights:**
+- No-contact magnetic detection—no moving parts
+- Dual-threshold voltage detection (via window comparator)
+- Two LED indicators:
+  - Yellow: Field approaching
+  - Red: Target position reached
+- Fully analog: no microcontroller or firmware
+- Hand-fabricated single-layer PCB
 
 ---
 
-## How It Works
+## Circuit Principle
 
-### Detection Principle
+The analog voltage output from the SS49E Hall Effect sensor varies with magnetic field intensity. Two op-amp comparators are used to define a voltage window, such that:
+- **Yellow LED** lights up when field is approaching
+- **Red LED** confirms that magnetic proximity has crossed the final threshold
 
-The **SS49E Hall Effect sensor** outputs an analog voltage (0–5V) proportional to magnetic flux density. At rest (no magnet), output is ~2.5V.
+A buffer stage is inserted between the Hall sensor and the comparator inputs to ensure accurate, low-impedance signal propagation.
 
-The **Window Comparator** (built with two LM358N op-amps) defines two thresholds:
-- **V<sub>L</sub>** (lower threshold) ≈ 1.67V
-- **V<sub>H</sub>** (upper threshold) ≈ 3.33V
+---
 
-### State Table
-
-| Magnet Distance   | V<sub>sensor</sub> | Yellow LED | Red LED | Status              |
-|------------------|--------------------|------------|---------|---------------------|
-| Far / Absent     | ~2.5V              | OFF        | OFF     | Idle                |
-| Approaching      | > V<sub>L</sub>    | ON         | OFF     | Field Detected      |
-| Target Distance  | V<sub>L</sub> < V < V<sub>H</sub> | ON         | ON      | Position Confirmed  |
-
-### Block Diagram
+## Block Diagram
 
 ```
-┌─────────────┐    ┌──────────────┐    ┌────────────────────┐    ┌─────────────┐
-│ Power       │───>│ SS49E Hall   │───>│ Window Comparator  │───>│ LED Output  │
-│ Supply      │    │ Sensor (U2)  │    │ U5.1 + U6.1/U6.2   │    │ Yellow/Red  │
-│ 7805A → 5V  │    │ Analog Out   │    │ (LM358N × 2)       │    │ Indicators  │
-└─────────────┘    └──────────────┘    └────────────────────┘    └─────────────┘
+┌─────────────┐    ┌──────────────┐    ┌────────────┐    ┌────────────────────┐    ┌─────────────┐
+│ Power       │───>│ 7805 Regulator│───>│ SS49E Sensor│───>│ Comparator Logic   │───>│ LED Outputs │
+│ Supply      │    │     (5V)     │    │ + Buffer    │    │ (LM358N × 2)       │    │ Yellow/Red  │
+└─────────────┘    └──────────────┘    └────────────┘    └────────────────────┘    └─────────────┘
 ```
 
 ---
 
 ## Circuit Design
 
-### Components
+The circuit is built around these key stages:
 
-| Component     | Part #   | Qty | Function                       |
-|--------------|----------|-----|--------------------------------|
-| Hall Sensor   | SS49E    | 1   | Magnetic flux → voltage       |
-| Op-Amp        | LM358N   | 2   | Window comparator (U5, U6)    |
-| Regulator     | 7805A    | 1   | Stable 5V supply              |
-| Resistors     | 1kΩ, 10kΩ | 6   | Current limiting, thresholds  |
-| Capacitors    | 100nF    | 3   | Decoupling                    |
-| LEDs          | KT-0603R | 3   | Status indicators             |
+1. **Power Regulation**:
+   - A 7805 voltage regulator delivers a stable 5V supply.
 
-### Circuit Stages
+2. **Sensor Stage**:
+   - The SS49E Hall Effect sensor outputs ~2.5V at rest.
+   - This signal is buffered using one op-amp in voltage follower mode.
 
-1. **Power Supply (U1, C1, C2)**
-   - 7805A regulates input to stable 5V
-   - C1/C2 decouple input/output
+3. **Window Comparator**:
+   - The buffered voltage is compared against two thresholds (V_L and V_H)
+   - One comparator activates the Yellow LED (V > V_L)
+   - Another comparator activates the Red LED (V within V_L and V_H range)
 
-2. **Hall Sensor (U2, C3)**
-   - SS49E outputs analog voltage proportional to magnetic field
-   - C3 decouples sensor supply
-
-3. **Window Comparator (U5.1, U6.1, U6.2)**
-   - U5.1: Buffer stage (voltage follower)
-   - U6.2: Lower comparator → Yellow LED when V<sub>sensor</sub> > V<sub>L</sub>
-   - U6.1: Upper comparator → Red LED when V<sub>L</sub> < V<sub>sensor</sub> < V<sub>H</sub>
-
-4. **LED Output**
-   - R1, R3, R4 (1kΩ) limit LED current to ~3mA
-   - Direct drive from comparator outputs
+4. **Output Indicators**:
+   - Two LEDs provide clear, real-time status of magnetic proximity.
 
 ---
 
-## Hardware Implementation
+## PCB Implementation
 
-### PCB Fabrication (Toner-Transfer Method)
+The circuit is fabricated on a single-layer PCB using the toner-transfer method:
 
-1. Design: PCB layout in EasyEDA
-2. Print: Mirrored layout on glossy paper (laser printer)
-3. Transfer: Iron toner onto copper-clad board
-4. Etch: Immerse in FeCl₃ solution
-5. Clean: Remove toner with acetone
-6. Drill: 1mm holes for components
-7. Solder: Assemble and test continuity
+- Designed in EasyEDA
+- Layout printed on glossy sheet and transferred with heat
+- Etched using ferric chloride (FeCl₃)
+- Holes drilled manually and components soldered
 
-Result: Single-layer PCB with 0.254mm trace width/clearance
+Minimum trace width and clearance: 0.254 mm
+
+---
+
+## Performance Summary
+
+- **Detection Range:** 1–4 cm (neodymium magnet)
+- **Response Time:** < 10 ms
+- **Power Consumption:** ~25 mA at 5V
+- **Reliability:** Successfully tested for approach, detection, and withdrawal scenarios
 
 ---
 
 ## Applications
 
-- Laptop lid closure detection
-- Industrial non-contact sensing
-- Seatbelt buckle detection
-- Flip cover sensing for phones/tablets
+- **Laptop lid proximity detection** (replicated from real use-case)
+- **Industrial sensing:** piston/cylinder position tracking
+- **Consumer devices:** flip cover detection in phones/tablets
+- **Automotive sensing:** seat-belt latching, gear position monitoring
 
 ---
 
-## Test Results
+## Future Scope
 
-| Test Case             | Expected Behavior         | Result    |
-|----------------------|---------------------------|-----------|
-| Power on, no magnet  | Green LED only            | ✅ PASS   |
-| Magnet approaching   | Yellow LED activates      | ✅ PASS   |
-| Magnet at target     | Red LED activates         | ✅ PASS   |
-| Magnet withdrawn     | LEDs deactivate in reverse| ✅ PASS   |
-
-**Performance:**
-- Detection range: 1–4 cm (neodymium magnet)
-- Response time: <10 ms
-- Power consumption: ~25 mA @ 5V
-
----
-
-## Repository Structure
-
-```
-├── README.md
-├── LICENSE
-├── hardware/
-│   ├── schematic.png
-│   ├── pcb-layout.png
-│   ├── BOM.csv
-│   └── photos/
-│       ├── pcb-etched.jpg
-│       └── assembled.jpg
-└── docs/
-    └── project-report.pdf
-```
-
----
-
-## Future Enhancements
-
-- [ ] Add hysteresis (Schmitt trigger) to prevent LED flicker
-- [ ] Integrate ESP32 for IoT monitoring
-- [ ] Replace LED output with MOSFET for actuator control
-- [ ] Multi-axis tracking with 3D sensor array
-- [ ] OLED display for real-time distance
+- Integrate hysteresis for flicker-free switching
+- Expand to multi-axis detection with orthogonal Hall sensors
+- Add ESP32 for Wi-Fi-based position reporting
+- Replace LEDs with control output (e.g., MOSFET driving relay)
+- Display magnetic field strength on OLED module
 
 ---
 
 ## Authors
 
-**Tripti Patel** (24116102) & **Sai Santosh** (24116104)  
-B.Tech — Electronics & Communication Engineering  
-National Institute of Technology, Raipur  
-Session: 2025–26
+**Tripti Patel** (24116102)  
+**Sai Santosh** (24116104)  
+B.Tech in Electronics & Communication Engineering  
+National Institute of Technology, Raipur (2025–26)
 
 **Supervisor:** Dr. Mayur Katwe
 
@@ -173,11 +123,7 @@ Session: 2025–26
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
-
-## Acknowledgments
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for full terms.
 
 - Dr. Mayur Katwe (Project Supervisor), NIT Raipur
 - Department of Electronics & Communication Engineering, NIT Raipur
