@@ -8,7 +8,7 @@
 
 A pure analog circuit that emulates the laptop lid detection mechanism. Utilizes a Hall Effect sensor and op-amp-based window comparator to detect magnetic proximity with two-level LED indication—without any microcontroller.
 
-![PCB Photo](hardware/photos/assembled.jpg)
+![PCB Photo](hardware/photos/assembled.jpeg)
 
 ---
 
