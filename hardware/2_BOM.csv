@@ -1,0 +1,12 @@
+Component,Part Number,Quantity,Role in Circuit
+Hall Effect Sensor,SS49E,1,Converts magnetic flux density to analog voltage
+Op-Amp (Dual),LM358N,2,Window comparator (U5 buffer + U6 comparators)
+Voltage Regulator,7805A,1,Regulates input to stable +5V supply
+Resistor,1kΩ,3,LED current limiting
+Resistor,10kΩ,3,Threshold voltage divider network
+Ceramic Capacitor,100nF,3,Decoupling for regulator and sensor
+LED (Green),KT-0603R,1,Power-on indicator
+LED (Yellow),KT-0603R,1,Field approaching indicator
+LED (Red),KT-0603R,1,Position confirmed indicator
+PCB,FR4 Single-Layer,1,Custom designed in EasyEDA
+Power Connector,2-pin 2.54mm,1,Input power connection
